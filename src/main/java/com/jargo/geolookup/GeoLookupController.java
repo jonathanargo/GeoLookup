@@ -9,6 +9,7 @@ import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -36,7 +37,24 @@ public class GeoLookupController implements Initializable {
         LookupConnector lookupConnector = new LookupConnector();
         lookupConnector.setAddress(addressField.getText());
         lookupConnector.setKey(this.getKey()); // Get key from file for the time being
-        String output = lookupConnector.makeRequest();
+        ApiResponse apiResponse = ApiResponseBuilder.buildApiResponse(lookupConnector);
+        
+        if (apiResponse.getResults().size() > 1) {
+            Output.handle("More than one result was returned for the address.", AlertType.ERROR);            
+        }
+        else {            
+            ApiResponseResult result = apiResponse.getResults().get(0);
+            
+            String newLine = System.getProperty("line.separator");
+            String outputText;
+            
+            outputText = "Status: " + apiResponse.getStatus() + newLine;
+            outputText += "Formatted address: " + result.getFormattedAdddress() + newLine;
+            outputText += "Location: "+result.getFormattedDegrees();
+
+            Output.handle(outputText, "Result", AlertType.INFORMATION);
+        }
+        
     }
     
     protected String getKey()

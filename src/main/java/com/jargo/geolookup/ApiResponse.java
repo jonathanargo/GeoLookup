@@ -9,44 +9,27 @@ import java.util.List;
 
 /**
  *
- * @author jargo
+ * @author jonat
  */
 public class ApiResponse {
-    
-    private String _status;
-    private String _rawResponse;
-    private List<ApiResponseResult> _results;
+    private String status;
+    private List<ApiResponseResult> results;
+    private String rawResponse;
 
-    public String getStatus() {
-        return _status;
-    }
-
-    public void setStatus(String status) {
-        this._status = status;
-    }
-
-    public List<ApiResponseResult> getResults() {
-        return _results;
-    }
-
-    public void setResults(List<ApiResponseResult> results) {
-        this._results = results;
-    }
-    
-    public void addResult(ApiResponseResult result) {
-        _results.add(result);
-    }
-    
-    public void setRawResponse(String rawResponse) {
-        this._rawResponse = rawResponse;
-    }
-    
     public String getRawResponse() {
-        return _rawResponse;
+        return rawResponse;
+    }
+
+    public void setRawResponse(String rawResponse) {
+        this.rawResponse = rawResponse;
     }
     
-    @Override
-    public String toString() {
-        return _status;        
+    public String getStatus()
+    {
+        return status;
+    }
+    
+    public List<ApiResponseResult> getResults() {
+        return results;
     }
 }

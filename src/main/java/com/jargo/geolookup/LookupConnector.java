@@ -1,10 +1,7 @@
 package com.jargo.geolookup;
 
-import com.google.gson.Gson;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -37,43 +34,19 @@ public class LookupConnector {
         this._key = key;
     }
 
-    public String makeRequest() {
+    public InputStream makeRequest() {
         try {
             // Build the URI
             URIBuilder uriBuilder = new URIBuilder(_urlBase);
             uriBuilder.addParameter("address", _address);
             uriBuilder.addParameter("key", _key);
             String uri = uriBuilder.toString();
+            
+            System.out.println("URI: "+uri);
 
             URL url = new URL(uri);
             URLConnection connection = url.openConnection();
-            InputStream in = connection.getInputStream();
-            
-            
-            String rawResponse = "";
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            String newLine = System.getProperty("line.separator");
-
-            try {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    rawResponse += line + newLine;
-                }
-
-            } catch (IOException ex) {
-                System.out.println("Failed to read raw response data: " + ex.getMessage());
-                rawResponse = null;
-            }
-            
-            System.out.println("Raw Response: "+rawResponse);
-            
-            Gson gson = new Gson();
-//            gson.fromJson(, classOfT)
-
-            
-            
-//            ApiResponse response = ApiResponseBuilder.buildApiResponse(in);
-//            System.out.println(response.getStatus());
+            return connection.getInputStream();
 
         } catch (MalformedURLException ex) {
             System.out.println("Bad URL detected.");
