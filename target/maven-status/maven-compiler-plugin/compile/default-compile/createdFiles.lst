@@ -1,0 +1,7 @@
+com\jargo\geolookup\LookupConnector.class
+com\jargo\geolookup\ApiResponseResult.class
+com\jargo\geolookup\FXMLController.class
+com\jargo\geolookup\GeoLookup.class
+com\jargo\geolookup\GeoLookupController.class
+com\jargo\geolookup\ApiResponseBuilder.class
+com\jargo\geolookup\ApiResponse.class
