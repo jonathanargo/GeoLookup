@@ -21,6 +21,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -159,10 +160,9 @@ public class GeoLookupController implements Initializable {
                 wb = new XSSFWorkbook(inputStream);
             }
             
-            
-            
             if (wb != null) {
-                List<String> addresses = parseInputFile(wb);
+                List<String> addresses = parseInputFile(wb);                
+                makeLookups(addresses);
             } else {
                 Output.handle("Failed to read workbook.", AlertType.ERROR);
             }
@@ -190,44 +190,87 @@ public class GeoLookupController implements Initializable {
         String stateFieldName = options.get("settings", "stateField");
         String zipFieldName = options.get("settings", "zipField");
         
-        for (Sheet sheet : wb) {
-            for (Row row : sheet) {
-                if (!headersSet) {
-                    int i = 0;
-                    for (Cell cell : row) {
-                        String cellValue = cell.getStringCellValue();
-                        if (cellValue.compareToIgnoreCase(fullAddressFieldName) == 0) {
-                            fullAddressKey = i;
-                        } else if (cellValue.compareToIgnoreCase(streetFieldName) == 0) {
-                            streetKey = i;
-                        } else if (cellValue.compareToIgnoreCase(cityFieldName) == 0) {
-                            cityKey = i;
-                        } else if (cellValue.compareToIgnoreCase(stateFieldName) == 0) {
-                            stateKey = i;
-                        } else if (cellValue.compareToIgnoreCase(zipFieldName) == 0) {
-                            zipKey = i;
+        String fullAddress = null;
+        String street = null;
+        String city = null;
+        String state = null;
+        String zip = null;
+        
+        // Go through our spreadsheet and parse the results.
+        try {
+            for (Sheet sheet : wb) {
+                for (Row row : sheet) {
+                    if (!headersSet) {
+                        // This is the header row, so lets match the fields to array keys.
+                        int i = 0;
+                        for (Cell cell : row) {
+                            // Does this field name match one of our input fields? If so, keep track of the key
+                            String cellValue = cell.getStringCellValue();
+                            if (cellValue.compareToIgnoreCase(fullAddressFieldName) == 0) {
+                                fullAddressKey = i;
+                            } else if (cellValue.compareToIgnoreCase(streetFieldName) == 0) {
+                                streetKey = i;
+                            } else if (cellValue.compareToIgnoreCase(cityFieldName) == 0) {
+                                cityKey = i;
+                            } else if (cellValue.compareToIgnoreCase(stateFieldName) == 0) {
+                                stateKey = i;
+                            } else if (cellValue.compareToIgnoreCase(zipFieldName) == 0) {
+                                zipKey = i;
+                            }
+                            i++;
                         }
-                        
-                        i++;
+
+                        if (fullAddressKey == -1 && (streetKey == -1 && cityKey == -1 && stateKey == -1 && zipKey == -1)) {
+                            Output.handle("Failed to find appropriate fields in input file.", AlertType.ERROR);
+                            return null;
+                        }
+                        headersSet = true;
+                    } else {
+                        // Assemble the address and add it to the list
+                        if (fullAddressKey != -1) {
+                            fullAddress = row.getCell(fullAddressKey).getStringCellValue();
+                        } else {
+                            street = row.getCell(streetKey).getStringCellValue();
+                            city = row.getCell(cityKey).getStringCellValue();
+                            state = row.getCell(stateKey).getStringCellValue();
+
+                            // Convert the zip code cell to a string before retrieving it
+                            row.getCell(zipKey).setCellType(CellType.STRING);
+                            zip = row.getCell(zipKey).getStringCellValue();
+
+                            fullAddress = street + " " + city + " " + state + " " + zip;
+                        }
                     }
-                    
-                    if (fullAddressKey == -1 && (streetKey == -1 && cityKey == -1 && stateKey == -1 && zipKey == -1)) {
-                        Output.handle("Failed to find appropriate fields in input file.", AlertType.ERROR);
-                        return null;                        
-                    }
-                    headersSet = true;
                 }
-                else {
-                    // todo                                        
-                }
-                
-                
-                headersSet = true;
+            }
+        } catch (Exception ex) {
+            Output.handle("An unknown error occurred while parsing input file: "+ex.getMessage());
+            return null;
+        }
+        return addresses;
+    }
+    
+    protected void makeLookups(List<String> addresses) {
+        for (String address : addresses) {
+            LookupConnector lookupConnector = new LookupConnector();
+            lookupConnector.setAddress(address);
+            lookupConnector.setKey(this.getKey());
+            ApiResponse apiResponse = ApiResponseBuilder.buildApiResponse(lookupConnector);
+            
+            List<String> badAddresses = new ArrayList();
+            if (apiResponse.getResults().size() > 1 || apiResponse.getStatus().compareToIgnoreCase("OK") != 0) {
+                badAddresses.add(address);
+            } else {
+                ApiResponseResult result = apiResponse.getResults().get(0);
+
+                String newLine = System.getProperty("line.separator");
+                String outputText;
+
+                outputText = "Status: " + apiResponse.getStatus() + newLine;
+                outputText += "Formatted address: " + result.getFormattedAdddress() + newLine;
+                System.out.println(address+" - "+result.getFormattedDegrees());
             }
         }
-        
-        
-        return addresses;
     }
     
     protected String getKey() {

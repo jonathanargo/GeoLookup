@@ -41,8 +41,6 @@ public class LookupConnector {
             uriBuilder.addParameter("address", _address);
             uriBuilder.addParameter("key", _key);
             String uri = uriBuilder.toString();
-            
-            System.out.println("URI: "+uri);
 
             URL url = new URL(uri);
             URLConnection connection = url.openConnection();
