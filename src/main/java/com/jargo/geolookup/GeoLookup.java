@@ -11,16 +11,16 @@ import javafx.stage.Stage;
  * @author jargo
  */
 public class GeoLookup extends Application {
-    
+
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/GeoLookup.fxml"));
-        
+
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
-        
+
         stage.setTitle("GeoLookup");
-        stage.setScene(scene);        
+        stage.setScene(scene);
         stage.show();
     }
 
@@ -30,5 +30,5 @@ public class GeoLookup extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }

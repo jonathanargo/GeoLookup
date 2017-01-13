@@ -6,30 +6,56 @@
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="-1.0" prefWidth="-1.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="com.jargo.geolookup.GeoLookupController">
+<AnchorPane id="AnchorPane" prefHeight="200.0" prefWidth="500.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="com.jargo.geolookup.GeoLookupController">
   <children>
-    <GridPane alignment="CENTER" hgap="10.0" layoutX="0.0" layoutY="0.0" prefHeight="-1.0" vgap="10.0">
+    <VBox prefHeight="400.0" prefWidth="400.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <children>
-        <Label text="" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-        <TextField fx:id="addressField" prefWidth="-1.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-        <Button fx:id="lookupButton" mnemonicParsing="false" onAction="#lookupSingleAddress" text="Lookup" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-        <Label fx:id="outputLabel" text="" GridPane.columnIndex="0" GridPane.columnSpan="2147483647" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+        <GridPane alignment="TOP_LEFT" gridLinesVisible="false" hgap="10.0" prefHeight="150.0" prefWidth="400.0" vgap="10.0">
+          <children>
+            <Label text="Single Address:" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <TextField fx:id="singleAddressField" disable="false" editable="true" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+            <RadioButton fx:id="singleAddressRadioButton" mnemonicParsing="false" onAction="#handleInputTypeChange" selected="true" text="" GridPane.columnIndex="0" GridPane.rowIndex="0">
+              <toggleGroup>
+                <ToggleGroup fx:id="lookupType" />
+              </toggleGroup>
+            </RadioButton>
+            <RadioButton fx:id="fileImportRadioButton" mnemonicParsing="false" onAction="#handleInputTypeChange" selected="false" text="" toggleGroup="$lookupType" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <Label text="File Import:" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+              <children>
+                <TextField fx:id="selectedFilePath" disable="true" editable="false" prefWidth="222.0">
+                  <HBox.margin>
+                    <Insets right="5.0" />
+                  </HBox.margin>
+                </TextField>
+                <Button fx:id="selectFileButton" mnemonicParsing="false" onAction="#selectFile" prefWidth="80.9998779296875" text="Select" />
+              </children>
+            </HBox>
+          </children>
+          <columnConstraints>
+            <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="179.0" minWidth="10.0" prefWidth="28.0" />
+            <ColumnConstraints halignment="LEFT" hgrow="SOMETIMES" maxWidth="179.0" minWidth="10.0" prefWidth="91.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="329.0" minWidth="10.0" prefWidth="311.0" />
+          </columnConstraints>
+          <padding>
+            <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+          </padding>
+          <rowConstraints>
+            <RowConstraints maxHeight="50.0" minHeight="10.0" prefHeight="45.0" valignment="CENTER" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="50.0" minHeight="10.0" prefHeight="45.0" valignment="CENTER" vgrow="SOMETIMES" />
+          </rowConstraints>
+        </GridPane>
+        <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="500.0" spacing="5.0">
+          <children>
+            <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOkAction" prefWidth="70.0" text="OK" />
+            <Button fx:id="closeButton" mnemonicParsing="false" onAction="#handleCloseAction" prefWidth="70.0" text="Close" />
+          </children>
+          <VBox.margin>
+            <Insets right="25.0" />
+          </VBox.margin>
+        </HBox>
       </children>
-      <columnConstraints>
-        <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="-1.0" prefWidth="-1.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="200.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-      </columnConstraints>
-      <padding>
-        <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
-      </padding>
-      <rowConstraints>
-        <RowConstraints maxHeight="100.0" minHeight="10.0" prefHeight="100.0" valignment="CENTER" vgrow="SOMETIMES" />
-        <RowConstraints maxHeight="31.0" minHeight="10.0" prefHeight="31.0" vgrow="SOMETIMES" />
-        <RowConstraints maxHeight="29.0" minHeight="10.0" prefHeight="29.0" vgrow="SOMETIMES" />
-      </rowConstraints>
-    </GridPane>
+    </VBox>
   </children>
 </AnchorPane>

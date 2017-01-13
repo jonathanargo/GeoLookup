@@ -11,7 +11,13 @@ public class Output {
     }
     
     public static void handle(String message, AlertType alertType) {
-        handle(message, "Message", alertType);       
+        String title = "Message";
+        if (alertType == AlertType.ERROR) {
+            title = "Error";
+        } else if (alertType == AlertType.WARNING) {
+            title = "Warning";
+        }
+        handle(message, title, alertType);       
     }
     
     public static void handle(String message, String title) {
