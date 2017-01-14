@@ -343,7 +343,6 @@ public class GeoLookupController implements Initializable {
         }
         
         return result;
-        
     }
     
     protected String getKey() {
@@ -351,20 +350,21 @@ public class GeoLookupController implements Initializable {
         
         String key = options.get("settings", "key");
         if (key.isEmpty()) {
-            try {
-                FileReader fReader = new FileReader("key.txt");
-                BufferedReader bReader = new BufferedReader(fReader);
-                String line;
-                while ((line = bReader.readLine()) != null) {
-                    returnVal += line;
+            File keyFile = new File("key.txt");
+            if (keyFile.canRead()) {
+                try {
+                    FileReader fReader = new FileReader("key.txt");
+                    BufferedReader bReader = new BufferedReader(fReader);
+                    String line;
+                    while ((line = bReader.readLine()) != null) {
+                        returnVal += line;
+                    }
+                } catch (FileNotFoundException ex) {
+                    Output.handle("Could not find file 'key.txt'", AlertType.ERROR);
+                } catch (IOException ex) {
+                    Output.handle("An error occurred while reading the key file: " + ex.getMessage(), AlertType.ERROR);
                 }
-
-            } catch (FileNotFoundException ex) {
-                Output.handle("Could not find file.", AlertType.ERROR);
-
-            } catch (IOException ex) {
-                Output.handle("An error occurred while reading the key file: "+ex.getMessage(), AlertType.ERROR);
-            }
+            }            
         } else {
             returnVal = key;
         }

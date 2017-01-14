@@ -6,12 +6,9 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import javafx.scene.control.Alert.AlertType;
 import org.apache.http.client.utils.URIBuilder;
 
-/**
- *
- * @author jargo
- */
 public class LookupConnector {
 
     private String _address;
@@ -47,13 +44,11 @@ public class LookupConnector {
             return connection.getInputStream();
 
         } catch (MalformedURLException ex) {
-            System.out.println("Bad URL detected.");
-
+            Output.handle("Bad URL detected.", AlertType.ERROR);
         } catch (IOException ex) {
-            System.out.println("Unable to establish connection to API.");
-            
+            Output.handle("Unable to establish connection to API.", AlertType.ERROR);            
         } catch (URISyntaxException ex) {
-            System.out.println("Bad URI syntax.");
+            Output.handle("Bad URI syntax.", AlertType.ERROR);
         }
 
         return null;

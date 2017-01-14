@@ -15,12 +15,12 @@
           <children>
             <Label text="Single Address:" GridPane.columnIndex="1" GridPane.rowIndex="0" />
             <TextField fx:id="singleAddressField" disable="false" editable="true" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-            <RadioButton fx:id="singleAddressRadioButton" mnemonicParsing="false" onAction="#handleInputTypeChange" selected="true" text="" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <RadioButton fx:id="singleAddressRadioButton" mnemonicParsing="false" onAction="#handleInputTypeChange" selected="false" text="" GridPane.columnIndex="0" GridPane.rowIndex="0">
               <toggleGroup>
                 <ToggleGroup fx:id="lookupType" />
               </toggleGroup>
             </RadioButton>
-            <RadioButton fx:id="fileImportRadioButton" mnemonicParsing="false" onAction="#handleInputTypeChange" selected="false" text="" toggleGroup="$lookupType" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <RadioButton fx:id="fileImportRadioButton" mnemonicParsing="false" onAction="#handleInputTypeChange" selected="true" text="" toggleGroup="$lookupType" GridPane.columnIndex="0" GridPane.rowIndex="1" />
             <Label text="File Import:" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.valignment="CENTER">
               <children>

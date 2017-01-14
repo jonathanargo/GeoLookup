@@ -5,16 +5,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import javafx.scene.control.Alert.AlertType;
 
 public class ApiResponseBuilder {
     public static ApiResponse buildApiResponse(LookupConnector lookupConnector) {
         
-        InputStream in = lookupConnector.makeRequest();
-        String rawResponse = readRawResponse(in);        
+        ApiResponse apiResponse = null;
         
-        Gson gson = new Gson();
-        ApiResponse apiResponse = gson.fromJson(rawResponse, ApiResponse.class);
-        apiResponse.setRawResponse(rawResponse);
+        try (InputStream in = lookupConnector.makeRequest()) {
+            String rawResponse = readRawResponse(in);
+            Gson gson = new Gson();
+            apiResponse = gson.fromJson(rawResponse, ApiResponse.class);
+            apiResponse.setRawResponse(rawResponse);
+        } catch (IOException ex) {
+            Output.handle("Failed to read response.", AlertType.ERROR);
+        }
         
         return apiResponse;
     }
@@ -32,7 +37,7 @@ public class ApiResponseBuilder {
             }
 
         } catch (IOException ex) {
-            System.out.println("Failed to read raw response data: " + ex.getMessage());
+            Output.handle("Failed to read raw response data.", AlertType.ERROR);
             rawResponse = null;
         }
         
