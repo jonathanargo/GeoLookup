@@ -49,7 +49,6 @@
         <HBox alignment="CENTER_RIGHT" prefHeight="35.0" prefWidth="500.0" spacing="5.0">
           <children>
             <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOkAction" prefWidth="70.0" text="OK" />
-            <Button fx:id="closeButton" mnemonicParsing="false" onAction="#handleCloseAction" prefWidth="70.0" text="Close" />
           </children>
           <VBox.margin>
             <Insets right="25.0" />
