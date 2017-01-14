@@ -1,2 +1,2 @@
 # GeoLookup
-Currently in-progress.
+Converts an address into decimal degrees through Google's GeoCoding API.
