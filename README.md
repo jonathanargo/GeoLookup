@@ -53,6 +53,9 @@ lngOutputField = longitude
 
 
 ## History
+* 1.0.2
+ * Added threading. No longer locks up UI when performing batched lookups.
+ * Fixed a bug where too many lookups in the same batch would cause an API error
 * 1.0.1
   * Fixed a bug causing an invalid error message when performing single lookups
   * Added deployed archive to repo. Will be replaced with a standard release later.
