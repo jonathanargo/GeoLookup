@@ -4,7 +4,7 @@
 
     <groupId>com.jargo</groupId>
     <artifactId>GeoLookup</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
 
     <name>GeoLookup</name>
@@ -97,7 +97,6 @@
                     </additionalClasspathElements>
                 </configuration>
             </plugin>
-            <!--
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
@@ -116,7 +115,6 @@
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
     <dependencies>
