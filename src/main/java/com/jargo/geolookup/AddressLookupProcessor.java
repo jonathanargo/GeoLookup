@@ -9,7 +9,6 @@ public class AddressLookupProcessor {
         lookupConnector.setAddress(address);
         lookupConnector.setKey(key);
         ApiResponse apiResponse = ApiResponseBuilder.buildApiResponse(lookupConnector);
-        GeoLookup.LOGGER.info(apiResponse.getRawResponse());
 
         if (apiResponse.getResults().size() == 1 || apiResponse.getStatus().compareToIgnoreCase("OK") == 0) {
             result = apiResponse.getResults().get(0);

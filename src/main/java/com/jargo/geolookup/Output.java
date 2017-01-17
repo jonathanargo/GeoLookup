@@ -35,8 +35,9 @@ public class Output {
     }
     
     public static void flush() {
-        for (OutputQueueItem queueItem : outputQueue) {
+        for (OutputQueueItem queueItem : outputQueue) {            
             Alert alert = queueItem.makeAlert();
+            GeoLookup.LOGGER.info("Flushing alert - '"+alert.getContentText());
             alert.showAndWait();
         }
         
