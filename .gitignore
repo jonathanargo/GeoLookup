@@ -7,8 +7,18 @@
 *.jar
 *.war
 *.ear
+*.zip
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
 key.txt
+# *.log
+
+# Random testing files
+*.xls
+*.xlsx
+
+# everything in the "target" directory
+target/
+target/**

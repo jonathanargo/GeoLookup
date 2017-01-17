@@ -9,12 +9,13 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
@@ -22,10 +23,6 @@ import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.ini4j.Wini;
@@ -47,8 +44,7 @@ public class GeoLookupController implements Initializable {
     private RadioButton fileImportRadioButton;
     
     private File selectedFile;
-    private Wini options;
-    private List<String> badAddresses;
+    private Wini options;    
     
      @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -67,9 +63,7 @@ public class GeoLookupController implements Initializable {
             if (key.compareToIgnoreCase("{your key here}") == 0) {
                 Output.handle("Please add your API key to settings.ini", AlertType.ERROR);
             }            
-        }
-        
-        badAddresses = new ArrayList();        
+        }      
     }
     
     @FXML
@@ -116,31 +110,51 @@ public class GeoLookupController implements Initializable {
     }
     
     private void lookupSingleAddress(ActionEvent event) {
-        // Initialize the connector and pass it to the response builder
-        LookupConnector lookupConnector = new LookupConnector();
-        lookupConnector.setAddress(singleAddressField.getText());
-        lookupConnector.setKey(this.getKey()); // Get key from file for the time being
-        ApiResponse apiResponse = ApiResponseBuilder.buildApiResponse(lookupConnector);
-        
-        if (apiResponse.getResults().size() > 1) {
-            // Technically this is valid output, but it's not going to be handled for our purposes
-            Output.handle("More than one result was returned for the address.", AlertType.ERROR);            
-        }
-        else {            
-            ApiResponseResult result = apiResponse.getResults().get(0);
-            
-            String newLine = System.getProperty("line.separator");
-            String outputText;
-            
-            outputText = "Status: " + apiResponse.getStatus() + newLine;
-            outputText += "Formatted address: " + result.getFormattedAdddress() + newLine;
-            outputText += "Location: "+result.getFormattedDegrees();
+        Task<Void> task = new Task<Void>() {
+            @Override
+            public Void call() throws InterruptedException {
+                // Initialize the connector and pass it to the response builder
+                LookupConnector lookupConnector = new LookupConnector();
+                lookupConnector.setAddress(singleAddressField.getText());
+                lookupConnector.setKey(options.get("settings", "key"));
+                ApiResponse apiResponse = ApiResponseBuilder.buildApiResponse(lookupConnector);
 
-            Output.handle(outputText, "Result", AlertType.INFORMATION);
-        }
+                if (apiResponse.getResults().size() > 1) {
+                    // Technically this is valid output, but it's not going to be handled for our purposes
+                    Output.handle("More than one result was returned for the address.", AlertType.ERROR);
+                } else {
+                    ApiResponseResult result = apiResponse.getResults().get(0);
+
+                    String newLine = System.getProperty("line.separator");
+                    String outputText;
+
+                    outputText = "Status: " + apiResponse.getStatus() + newLine;
+                    outputText += "Formatted address: " + result.getFormattedAdddress() + newLine;
+                    outputText += "Location: " + result.getFormattedDegrees();
+
+                    Output.handle(outputText, "Result", AlertType.INFORMATION);
+                }
+                
+                return null;
+            }
+        };
+        
+        task.setOnSucceeded(e-> {
+            GeoLookup.LOGGER.info("Single lookup succeeded.");
+            Output.flush();
+        });
+        
+        task.setOnFailed(e-> {
+            GeoLookup.LOGGER.info("Single lookup failed.");
+            Output.handle("Single lookup failed: "+task.getException().getMessage());
+            Output.flush();
+        });
+
+        Thread thread = new Thread(task);
+        thread.start();
     }
     
-    private void lookupFromFile(ActionEvent event) {
+    private void lookupFromFile(ActionEvent event) {                
         if (selectedFile == null) {
             Output.handle("You must select a file.", AlertType.ERROR);
         } else if (!selectedFile.canRead()) {
@@ -157,22 +171,29 @@ public class GeoLookupController implements Initializable {
             }
             
             if (wb != null) {
-                parseInputFile(wb);
+                WorkbookProcessor wbProcessor = new WorkbookProcessor(wb, options);
+                Workbook outputWorkbook = wbProcessor.processWorkbook();
                 try {
                     //Write the result
                     File outputFile = selectSpreadsheetFile(FileChooserType.SAVE, "Save Result");
                     FileOutputStream outputStream = new FileOutputStream(outputFile);
-                    wb.write(outputStream);
+                    outputWorkbook.write(outputStream);
                     outputStream.close();
                 } catch (IOException ex) {
                     Output.handle("Failed to write output file: " + ex.getMessage(), AlertType.ERROR);
                 }
                 
-                if (!badAddresses.isEmpty()) {
-                    String newLine = System.getProperty("line.separator");
-                    String badAddressWarning = "The following addresses were unable to be converted:" + newLine;
-                    for (String badAddress : badAddresses) {
-                        badAddressWarning += badAddress + newLine;
+                List<String> badAddresses = wbProcessor.getBadAddresses();
+                if (!badAddresses.isEmpty()) {                    
+                    String badAddressWarning;
+                    if (badAddresses.size() > 10) {
+                        badAddressWarning  = badAddresses.size()+" addresses were unable to be converted. Please see log for details.";                        
+                    } else {
+                        String newLine = System.getProperty("line.separator");
+                        badAddressWarning = "The following addresses were unable to be converted: (omitted)" + newLine; 
+                        for (String badAddress : badAddresses) {                            
+                            badAddressWarning += badAddress + newLine;
+                        }
                     }
 
                     Output.handle(badAddressWarning, AlertType.WARNING);
@@ -186,144 +207,6 @@ public class GeoLookupController implements Initializable {
         } catch (IOException ex) {
             Output.handle("Failed to read input file: "+ex.getMessage(), AlertType.ERROR);
         }
-    }
-    
-    protected void parseInputFile(Workbook wb) {
-        List<String> addresses = new ArrayList<>();
-        
-        Boolean headersSet = false;
-        
-        // Input keys
-        int fullAddressKey = -1;
-        int streetKey = -1;
-        int cityKey = -1; 
-        int stateKey = -1;
-        int zipKey = -1;
-        
-        // Output keys
-        int latKey = -1;
-        int lngKey = -1;
-        int fullLocationKey = -1;        
-        
-        String fullAddressFieldName = options.get("settings", "fullAddressField");
-        String streetFieldName = options.get("settings", "streetField");
-        String cityFieldName = options.get("settings", "cityField");
-        String stateFieldName = options.get("settings", "stateField");
-        String zipFieldName = options.get("settings", "zipField");
-        
-        String fullAddress;
-        String street;
-        String city;
-        String state;
-        String zip;
-        
-        // Go through our spreadsheet and parse the results.
-        try {
-            for (Sheet sheet : wb) {
-                for (Row row : sheet) {
-                    if (!headersSet) {
-                        // This is the header row, so lets match the fields to array keys.
-                        int i = 0;
-                        for (Cell cell : row) {
-                            // Does this field name match one of our input fields? If so, keep track of the key
-                            // Probably a better way to do this...
-                            String cellValue = cell.getStringCellValue();
-                            if (cellValue.compareToIgnoreCase(fullAddressFieldName) == 0) {
-                                fullAddressKey = i;
-                            } else if (cellValue.compareToIgnoreCase(streetFieldName) == 0) {
-                                streetKey = i;
-                            } else if (cellValue.compareToIgnoreCase(cityFieldName) == 0) {
-                                cityKey = i;
-                            } else if (cellValue.compareToIgnoreCase(stateFieldName) == 0) {
-                                stateKey = i;
-                            } else if (cellValue.compareToIgnoreCase(zipFieldName) == 0) {
-                                zipKey = i;
-                            }
-                            i++;
-                        }
-
-                        if (fullAddressKey == -1 && (streetKey == -1 && cityKey == -1 && stateKey == -1 && zipKey == -1)) {
-                            Output.handle("Failed to find appropriate fields in input file.", AlertType.ERROR);
-                            return;
-                        }
-                        
-                        // Get the output field headers
-                        String latOutputField = options.get("settings", "latOutputField");
-                        String lngOutputField = options.get("settings", "lngOutputField");
-                        String fullLocationOutputField = options.get("settings", "fullLocationOutputField");
-                        
-                        // Add headers as necessary
-                        if (!latOutputField.isEmpty()) {
-                            latKey = row.getLastCellNum();
-                            row.createCell(latKey, CellType.STRING).setCellValue(latOutputField);
-                        }                        
-                        if (!lngOutputField.isEmpty()) {
-                            lngKey = row.getLastCellNum();
-                            row.createCell(lngKey, CellType.STRING).setCellValue(lngOutputField);
-                        }                        
-                        if (!fullLocationOutputField.isEmpty()) {
-                            fullLocationKey = row.getLastCellNum();
-                            row.createCell(fullLocationKey, CellType.STRING).setCellValue(fullLocationOutputField);
-                        }
-                        
-                        headersSet = true;
-                    } else {
-                        // Assemble the address and add it to the list
-                        if (fullAddressKey != -1) {
-                            fullAddress = row.getCell(fullAddressKey).getStringCellValue();
-                        } else {
-                            street = row.getCell(streetKey).getStringCellValue();
-                            city = row.getCell(cityKey).getStringCellValue();
-                            state = row.getCell(stateKey).getStringCellValue();
-
-                            // Convert the zip code cell to a string before retrieving it
-                            row.getCell(zipKey).setCellType(CellType.STRING);
-                            zip = row.getCell(zipKey).getStringCellValue();
-
-                            fullAddress = street + " " + city + " " + state + " " + zip;
-                        }
-                        
-                        ApiResponseResult responseResult = lookupAddress(fullAddress);
-                        if (responseResult != null) {
-                            // This result is going in our output. Add new columns as necessary.
-                            // Todo - support overwriting file
-                            String lat = String.valueOf(responseResult.getGeometry().getLocation().getLat());
-                            String lng = String.valueOf(responseResult.getGeometry().getLocation().getLng());
-                            
-                            if (latKey != -1) {
-                                row.createCell(latKey, CellType.STRING).setCellValue(lat);
-                            }                            
-                            if (lngKey != -1) {
-                                row.createCell(lngKey, CellType.STRING).setCellValue(lng);
-                            }
-                            if (fullLocationKey != -1) {
-                                row.createCell(fullLocationKey, CellType.STRING).setCellValue(lat+","+lng);
-                            }
-                        } else {
-                            // We'll deal with these later
-                            badAddresses.add(fullAddress);
-                        }
-                    }
-                }
-            }            
-        } catch (Exception ex) {
-            Output.handle("An unknown error occurred while parsing input file: "+ex.getMessage());
-        }
-    }
-    
-    protected ApiResponseResult lookupAddress(String address) {
-        ApiResponseResult result = null;
-        
-        LookupConnector lookupConnector = new LookupConnector();
-        lookupConnector.setAddress(address);
-        lookupConnector.setKey(this.getKey());
-        ApiResponse apiResponse = ApiResponseBuilder.buildApiResponse(lookupConnector);
-
-        if (apiResponse.getResults().size() == 1 || apiResponse.getStatus().compareToIgnoreCase("OK") == 0) {
-            result = apiResponse.getResults().get(0);
-        }
-        
-        return result;
     }
     
     protected File selectSpreadsheetFile(FileChooserType type, String title) {        
@@ -370,6 +253,5 @@ public class GeoLookupController implements Initializable {
         }
         
         return returnVal;
-    }
-    
+    }    
 }

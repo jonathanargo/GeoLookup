@@ -38,6 +38,8 @@ public class LookupConnector {
             uriBuilder.addParameter("address", _address);
             uriBuilder.addParameter("key", _key);
             String uri = uriBuilder.toString();
+            
+            GeoLookup.LOGGER.info("Making call to "+uri);
 
             URL url = new URL(uri);
             URLConnection connection = url.openConnection();
@@ -46,7 +48,7 @@ public class LookupConnector {
         } catch (MalformedURLException ex) {
             Output.handle("Bad URL detected.", AlertType.ERROR);
         } catch (IOException ex) {
-            Output.handle("Unable to establish connection to API.", AlertType.ERROR);            
+            Output.handle("Unable to establish connection to API: "+ex.getMessage(), AlertType.ERROR);            
         } catch (URISyntaxException ex) {
             Output.handle("Bad URI syntax.", AlertType.ERROR);
         }

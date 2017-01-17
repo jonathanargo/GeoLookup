@@ -1,0 +1,8 @@
+Jan 17, 2017 1:10:21 PM com.jargo.geolookup.GeoLookup start
+INFO: Logging initialized
+Jan 17, 2017 1:10:49 PM com.jargo.geolookup.LookupConnector makeRequest
+INFO: Making call to https://maps.googleapis.com/maps/api/geocode/json?address=209+wentworth+dr+greenwood+sc+29649&key=
+Jan 17, 2017 1:10:50 PM com.jargo.geolookup.Output handle
+INFO: Status: OK
+Formatted address: 209 Wentworth Dr, Greenwood, SC 29649, USA
+Location: 34.210545,-82.22282
