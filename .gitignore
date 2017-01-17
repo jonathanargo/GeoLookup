@@ -13,7 +13,9 @@
 hs_err_pid*
 
 key.txt
-# *.log
+
+# Keep log files out
+*.log
 
 # Random testing files
 *.xls
